@@ -119,8 +119,8 @@ def pep(session):
 
         soup = BeautifulSoup(response.text, 'lxml')
         card_tag = find_tag(soup, 'section', attrs={'id': 'pep-content'})
-        information_tag = find_tag(card_tag, 'dl',
-                                   attrs={'class': 'rfc2822 field-list simple'})
+        information_tag = find_tag(
+            card_tag, 'dl', attrs={'class': 'rfc2822 field-list simple'})
         for status_tag in information_tag:
             if 'Status' in status_tag:
                 status = status_tag.next_sibling.next_sibling.string
