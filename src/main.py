@@ -7,8 +7,8 @@ import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_URL
+from configs import configure_argument_parser, configure_logging, logger
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_URL, RESULTS
 from outputs import control_output
 from utils import find_tag, get_response
 
@@ -27,7 +27,6 @@ def whats_new(session):
     sections_by_python = div_with_ul.find_all('li',
                                               attrs={'class': 'toctree-l1'})
 
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
     for section in tqdm(sections_by_python):
         version_a_tag = section.find('a')
         href = version_a_tag['href']
@@ -39,11 +38,11 @@ def whats_new(session):
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
-        results.append(
+        RESULTS.append(
             (version_link, h1.text, dl_text)
         )
 
-        return results
+        return RESULTS
 
 
 def latest_versions(session):
@@ -88,7 +87,6 @@ def download(session):
                           {'href': re.compile(r'.+pdf-a4\.zip$')})
     pdf_a4_link = pdf_a4_tag['href']
     archive_url = urljoin(downloads_url, pdf_a4_link)
-    print(archive_url)
 
     filename = archive_url.split('/')[-1]
     downloads_dir = BASE_DIR / 'downloads'
@@ -97,7 +95,7 @@ def download(session):
     response = session.get(archive_url)
     with open(archive_path, 'wb') as file:
         file.write(response.content)
-    logging.info(f'Архив был загружен и сохранён: {archive_path}')
+    logger.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
 def pep(session):
@@ -111,7 +109,7 @@ def pep(session):
     count_status_in_card = defaultdict(int)
     results = [('Статус', 'Количество')]
 
-    for i in range(1, len(section_with_tr)):
+    for i in tqdm(range(1, len(section_with_tr))):
         href = section_with_tr[i].a['href']
         version_link = urljoin(PEP_URL, href)
         response = session.get(version_link)

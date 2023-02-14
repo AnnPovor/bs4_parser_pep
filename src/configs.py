@@ -43,3 +43,6 @@ def configure_logging():
         level=logging.INFO,
         handlers=(rotating_handler, logging.StreamHandler())
     )
+
+
+logger = logging.getLogger(__name__)
